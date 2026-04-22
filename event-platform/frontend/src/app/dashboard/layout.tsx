@@ -1,21 +1,24 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useSyncExternalStore } from 'react';
 import { useRouter } from 'next/navigation';
 import { isAuthenticated } from '@/lib/auth';
 import Navbar from '@/components/Navbar';
 
+const subscribe = () => () => {};
+
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const [ready] = useState(() => isAuthenticated());
+  const hasMounted = useSyncExternalStore(subscribe, () => true, () => false);
+  const authenticated = hasMounted && isAuthenticated();
 
   useEffect(() => {
-    if (!isAuthenticated()) {
+    if (hasMounted && !authenticated) {
       router.push('/login');
     }
-  }, [router]);
+  }, [hasMounted, authenticated, router]);
 
-  if (!ready) {
+  if (!hasMounted || !authenticated) {
     return (
       <>
         <Navbar />
