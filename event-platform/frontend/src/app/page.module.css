@@ -1,0 +1,235 @@
+/* ===== Hero ===== */
+.hero {
+  position: relative;
+  min-height: 600px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 24px;
+  overflow: hidden;
+  background: linear-gradient(160deg, #0f172a 0%, #1e1b4b 40%, #312e81 70%, #4338ca 100%);
+}
+
+.heroOverlay {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 30% 50%, rgba(99, 102, 241, 0.2) 0%, transparent 60%),
+              radial-gradient(ellipse at 70% 30%, rgba(168, 85, 247, 0.15) 0%, transparent 50%);
+}
+
+.heroContent {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  max-width: 680px;
+}
+
+.heroBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: var(--radius-full);
+  padding: 8px 18px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--primary-200);
+  margin-bottom: 28px;
+  backdrop-filter: blur(8px);
+}
+
+.heroTitle {
+  font-size: 56px;
+  font-weight: 800;
+  color: white;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  margin-bottom: 20px;
+}
+
+.heroAccent {
+  background: linear-gradient(135deg, #818cf8, #a78bfa, #c084fc);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.heroSubtitle {
+  font-size: 18px;
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1.6;
+  margin-bottom: 36px;
+  max-width: 520px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.heroCta {
+  display: flex;
+  gap: 14px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.heroCta .btn-secondary {
+  border-color: rgba(255, 255, 255, 0.2);
+  color: white;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.heroCta .btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+  color: white;
+}
+
+/* Floating cards */
+.heroVisual {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  pointer-events: none;
+}
+
+.floatingCard {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-md);
+  padding: 12px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.85);
+  animation: float 6s ease-in-out infinite;
+}
+
+.floatingCard:nth-child(1) { top: 20%; right: 8%; }
+.floatingCard:nth-child(2) { top: 55%; left: 5%; }
+.floatingCard:nth-child(3) { bottom: 15%; right: 12%; }
+
+.cardDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+
+/* ===== Features ===== */
+.features {
+  padding: 100px 0;
+  background: var(--bg-primary);
+}
+
+.sectionTitle {
+  text-align: center;
+  font-size: 36px;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+  margin-bottom: 8px;
+}
+
+.sectionSubtitle {
+  text-align: center;
+  font-size: 17px;
+  color: var(--text-secondary);
+  margin-bottom: 56px;
+}
+
+.featureGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+@media (max-width: 900px) {
+  .featureGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .featureGrid {
+    grid-template-columns: 1fr;
+  }
+  .heroTitle {
+    font-size: 36px;
+  }
+}
+
+.featureCard {
+  padding: 32px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-light);
+  transition: all var(--transition-base);
+  background: white;
+}
+
+.featureCard:hover {
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-4px);
+  border-color: var(--primary-200);
+}
+
+.featureIcon {
+  font-size: 36px;
+  margin-bottom: 16px;
+}
+
+.featureTitle {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: var(--text-primary);
+}
+
+.featureDesc {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+/* ===== CTA ===== */
+.ctaSection {
+  padding: 80px 0;
+  background: var(--bg-secondary);
+}
+
+.ctaCard {
+  text-align: center;
+  padding: 64px 40px;
+  background: linear-gradient(135deg, var(--primary-600), #7c3aed);
+  border-radius: var(--radius-xl);
+  color: white;
+}
+
+.ctaTitle {
+  font-size: 32px;
+  font-weight: 800;
+  margin-bottom: 12px;
+  letter-spacing: -0.02em;
+}
+
+.ctaText {
+  font-size: 17px;
+  opacity: 0.85;
+  margin-bottom: 32px;
+}
+
+/* ===== Footer ===== */
+.footer {
+  padding: 32px 0;
+  text-align: center;
+  font-size: 14px;
+  color: var(--text-secondary);
+  border-top: 1px solid var(--border-light);
+}

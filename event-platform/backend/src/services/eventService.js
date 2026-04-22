@@ -1,0 +1,137 @@
+const Event = require('../models/Event');
+const RSVP = require('../models/RSVP');
+const ApiError = require('../utils/apiError');
+const generateSlug = require('../utils/generateSlug');
+const emailService = require('./emailService');
+
+/**
+ * Create a new event for an organizer.
+ */
+const createEvent = async (organizerId, data) => {
+  const slug = generateSlug(data.title);
+  const event = await Event.create({
+    ...data,
+    organizer: organizerId,
+    slug,
+  });
+  return event;
+};
+
+/**
+ * Get all events for an organizer.
+ */
+const getOrganizerEvents = async (organizerId) => {
+  return Event.find({ organizer: organizerId }).sort({ createdAt: -1 });
+};
+
+/**
+ * Get a single event (owner only).
+ */
+const getEventById = async (eventId, organizerId) => {
+  const event = await Event.findById(eventId);
+  if (!event) throw new ApiError(404, 'Event not found');
+  if (event.organizer.toString() !== organizerId.toString()) {
+    throw new ApiError(403, 'Not authorized to access this event');
+  }
+  return event;
+};
+
+/**
+ * Update an event (owner only).
+ */
+const updateEvent = async (eventId, organizerId, data) => {
+  const event = await getEventById(eventId, organizerId);
+
+  // Don't allow editing cancelled events
+  if (event.status === 'cancelled') {
+    throw new ApiError(400, 'Cannot edit a cancelled event');
+  }
+
+  const allowedFields = [
+    'title', 'description', 'dateTime', 'venue', 'isOnline',
+    'onlineLink', 'capacity', 'registrationMode',
+  ];
+
+  allowedFields.forEach((field) => {
+    if (data[field] !== undefined) {
+      event[field] = data[field];
+    }
+  });
+
+  // Regenerate slug if title changed
+  if (data.title) {
+    event.slug = generateSlug(data.title);
+  }
+
+  await event.save();
+  return event;
+};
+
+/**
+ * Change event status (publish / cancel).
+ */
+const changeEventStatus = async (eventId, organizerId, newStatus) => {
+  const event = await getEventById(eventId, organizerId);
+
+  const validTransitions = {
+    draft: ['published', 'cancelled'],
+    published: ['cancelled'],
+    cancelled: [],
+  };
+
+  if (!validTransitions[event.status].includes(newStatus)) {
+    throw new ApiError(
+      400,
+      `Cannot change status from "${event.status}" to "${newStatus}"`
+    );
+  }
+
+  event.status = newStatus;
+  await event.save();
+
+  // If event cancelled, notify all registered/approved attendees
+  if (newStatus === 'cancelled') {
+    const attendees = await RSVP.find({
+      event: eventId,
+      status: { $in: ['registered', 'approved', 'pending'] },
+    });
+
+    for (const attendee of attendees) {
+      await emailService.sendEmail(attendee.email, 'eventCancelled', {
+        attendeeName: attendee.name,
+        eventTitle: event.title,
+      });
+    }
+  }
+
+  return event;
+};
+
+/**
+ * Get a published event by slug (public access).
+ */
+const getPublicEvent = async (slug) => {
+  const event = await Event.findOne({ slug, status: 'published' });
+  if (!event) throw new ApiError(404, 'Event not found');
+
+  // Determine registration status
+  let registrationStatus = 'open';
+  if (event.status === 'cancelled') {
+    registrationStatus = 'cancelled';
+  } else if (event.registeredCount >= event.capacity) {
+    registrationStatus = 'full';
+  } else if (new Date(event.dateTime) < new Date()) {
+    registrationStatus = 'closed';
+  }
+
+  return { event, registrationStatus };
+};
+
+module.exports = {
+  createEvent,
+  getOrganizerEvents,
+  getEventById,
+  updateEvent,
+  changeEventStatus,
+  getPublicEvent,
+};
