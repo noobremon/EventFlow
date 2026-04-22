@@ -2,18 +2,20 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useState, useSyncExternalStore } from 'react';
 import { isAuthenticated, getUser, clearAuth } from '@/lib/auth';
-import { User } from '@/types';
+
+const subscribe = () => () => {};
 
 export default function Navbar() {
   const router = useRouter();
-  const [user, setUser] = useState<User | null>(() => (isAuthenticated() ? getUser() : null));
+  const hasMounted = useSyncExternalStore(subscribe, () => true, () => false);
+  const user = hasMounted && isAuthenticated() ? getUser() : null;
   const [menuOpen, setMenuOpen] = useState(false);
 
   const handleLogout = () => {
     clearAuth();
-    setUser(null);
+    setMenuOpen(false);
     router.push('/');
   };
 
