@@ -2,14 +2,27 @@
 
 import { RSVP } from '@/types';
 
+type AttendanceStatus = 'present' | 'absent';
+
 interface Props {
   attendees: RSVP[];
   registrationMode: 'open' | 'shortlisted';
   onStatusChange: (rsvpId: string, status: string) => void;
   loading?: string | null; // rsvpId currently loading
+  isEventDay?: boolean;
+  attendanceMarks?: Record<string, AttendanceStatus>;
+  onAttendanceChange?: (rsvpId: string, status: AttendanceStatus) => void;
 }
 
-export default function AttendeeTable({ attendees, registrationMode, onStatusChange, loading }: Props) {
+export default function AttendeeTable({
+  attendees,
+  registrationMode,
+  onStatusChange,
+  loading,
+  isEventDay = false,
+  attendanceMarks = {},
+  onAttendanceChange,
+}: Props) {
   const isShortlistedMode = registrationMode === 'shortlisted';
 
   if (attendees.length === 0) {
@@ -31,6 +44,7 @@ export default function AttendeeTable({ attendees, registrationMode, onStatusCha
             <th className="px-4 py-3">Email</th>
             <th className="px-4 py-3">Status</th>
             <th className="px-4 py-3">Registered</th>
+            <th className="px-4 py-3">Attendance</th>
             <th className="px-4 py-3">{isShortlistedMode ? 'Review Actions' : 'Actions'}</th>
           </tr>
         </thead>
@@ -50,6 +64,30 @@ export default function AttendeeTable({ attendees, registrationMode, onStatusCha
                   day: 'numeric',
                   year: 'numeric',
                 })}
+              </td>
+              <td className="px-4 py-3">
+                {isEventDay && (attendee.status === 'registered' || attendee.status === 'approved') ? (
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      className={`btn btn-sm ${attendanceMarks[attendee._id] === 'present' ? 'btn-success' : 'btn-secondary'}`}
+                      onClick={() => onAttendanceChange?.(attendee._id, 'present')}
+                      id={`mark-present-${attendee._id}`}
+                    >
+                      Present
+                    </button>
+                    <button
+                      className={`btn btn-sm ${attendanceMarks[attendee._id] === 'absent' ? 'btn-danger' : 'btn-secondary'}`}
+                      onClick={() => onAttendanceChange?.(attendee._id, 'absent')}
+                      id={`mark-absent-${attendee._id}`}
+                    >
+                      Absent
+                    </button>
+                  </div>
+                ) : (
+                  <span className="text-xs text-slate-400">
+                    {isEventDay ? 'Unavailable for current status' : 'Available on event day'}
+                  </span>
+                )}
               </td>
               <td className="px-4 py-3">
                 <div className="flex flex-wrap gap-2">

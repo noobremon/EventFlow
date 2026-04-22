@@ -7,6 +7,8 @@ import api from '@/lib/api';
 import { RSVP, Event } from '@/types';
 import AttendeeTable from '@/components/AttendeeTable';
 
+type AttendanceStatus = 'present' | 'absent';
+
 export default function AttendeesPage() {
   const params = useParams();
   const eventId = params.id as string;
@@ -18,6 +20,27 @@ export default function AttendeesPage() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [error, setError] = useState('');
+  const [attendanceMarks, setAttendanceMarks] = useState<Record<string, AttendanceStatus>>(() => {
+    if (typeof window === 'undefined') return {};
+    const saved = window.localStorage.getItem(`attendance:${eventId}`);
+    if (!saved) return {};
+    try {
+      return JSON.parse(saved) as Record<string, AttendanceStatus>;
+    } catch {
+      return {};
+    }
+  });
+
+  const isEventDay = (() => {
+    if (!event?.dateTime) return false;
+    const eventDate = new Date(event.dateTime);
+    const today = new Date();
+    return (
+      eventDate.getFullYear() === today.getFullYear() &&
+      eventDate.getMonth() === today.getMonth() &&
+      eventDate.getDate() === today.getDate()
+    );
+  })();
 
   const fetchAttendees = async () => {
     try {
@@ -54,6 +77,16 @@ export default function AttendeesPage() {
     } finally {
       setActionLoading(null);
     }
+  };
+
+  const handleAttendanceChange = (rsvpId: string, status: AttendanceStatus) => {
+    setAttendanceMarks((prev) => {
+      const next = { ...prev, [rsvpId]: status };
+      if (typeof window !== 'undefined') {
+        window.localStorage.setItem(`attendance:${eventId}`, JSON.stringify(next));
+      }
+      return next;
+    });
   };
 
   if (loading) {
@@ -111,6 +144,9 @@ export default function AttendeesPage() {
         registrationMode={event?.registrationMode || 'open'}
         onStatusChange={handleStatusChange}
         loading={actionLoading}
+        isEventDay={isEventDay}
+        attendanceMarks={attendanceMarks}
+        onAttendanceChange={handleAttendanceChange}
       />
     </div>
   );
