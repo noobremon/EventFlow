@@ -30,6 +30,7 @@ export default function AttendeesPage() {
       return {};
     }
   });
+  const [pendingAttendance, setPendingAttendance] = useState<Record<string, AttendanceStatus>>({});
 
   const isEventDay = (() => {
     if (!event?.dateTime) return false;
@@ -79,12 +80,27 @@ export default function AttendeesPage() {
     }
   };
 
-  const handleAttendanceChange = (rsvpId: string, status: AttendanceStatus) => {
+  const handleAttendanceSelect = (rsvpId: string, status: AttendanceStatus) => {
+    if (attendanceMarks[rsvpId]) return;
+    setPendingAttendance((prev) => ({ ...prev, [rsvpId]: status }));
+  };
+
+  const handleAttendanceConfirm = (rsvpId: string) => {
+    if (attendanceMarks[rsvpId]) return;
+    const selectedStatus = pendingAttendance[rsvpId];
+    if (!selectedStatus) return;
+
     setAttendanceMarks((prev) => {
-      const next = { ...prev, [rsvpId]: status };
+      const next = { ...prev, [rsvpId]: selectedStatus };
       if (typeof window !== 'undefined') {
         window.localStorage.setItem(`attendance:${eventId}`, JSON.stringify(next));
       }
+      return next;
+    });
+
+    setPendingAttendance((prev) => {
+      const next = { ...prev };
+      delete next[rsvpId];
       return next;
     });
   };
@@ -146,7 +162,9 @@ export default function AttendeesPage() {
         loading={actionLoading}
         isEventDay={isEventDay}
         attendanceMarks={attendanceMarks}
-        onAttendanceChange={handleAttendanceChange}
+        pendingAttendance={pendingAttendance}
+        onAttendanceSelect={handleAttendanceSelect}
+        onAttendanceConfirm={handleAttendanceConfirm}
       />
     </div>
   );

@@ -11,7 +11,9 @@ interface Props {
   loading?: string | null; // rsvpId currently loading
   isEventDay?: boolean;
   attendanceMarks?: Record<string, AttendanceStatus>;
-  onAttendanceChange?: (rsvpId: string, status: AttendanceStatus) => void;
+  pendingAttendance?: Record<string, AttendanceStatus>;
+  onAttendanceSelect?: (rsvpId: string, status: AttendanceStatus) => void;
+  onAttendanceConfirm?: (rsvpId: string) => void;
 }
 
 export default function AttendeeTable({
@@ -21,7 +23,9 @@ export default function AttendeeTable({
   loading,
   isEventDay = false,
   attendanceMarks = {},
-  onAttendanceChange,
+  pendingAttendance = {},
+  onAttendanceSelect,
+  onAttendanceConfirm,
 }: Props) {
   const isShortlistedMode = registrationMode === 'shortlisted';
 
@@ -67,22 +71,37 @@ export default function AttendeeTable({
               </td>
               <td className="px-4 py-3">
                 {isEventDay && (attendee.status === 'registered' || attendee.status === 'approved') ? (
-                  <div className="flex flex-wrap items-center gap-2">
-                    <button
-                      className={`btn btn-sm ${attendanceMarks[attendee._id] === 'present' ? 'btn-success' : 'btn-secondary'}`}
-                      onClick={() => onAttendanceChange?.(attendee._id, 'present')}
-                      id={`mark-present-${attendee._id}`}
-                    >
-                      Present
-                    </button>
-                    <button
-                      className={`btn btn-sm ${attendanceMarks[attendee._id] === 'absent' ? 'btn-danger' : 'btn-secondary'}`}
-                      onClick={() => onAttendanceChange?.(attendee._id, 'absent')}
-                      id={`mark-absent-${attendee._id}`}
-                    >
-                      Absent
-                    </button>
-                  </div>
+                  attendanceMarks[attendee._id] ? (
+                    <span className={`badge ${attendanceMarks[attendee._id] === 'present' ? 'badge-approved' : 'badge-rejected'}`}>
+                      {attendanceMarks[attendee._id]}
+                    </span>
+                  ) : (
+                    <div className="flex flex-wrap items-center gap-2">
+                      <button
+                        className={`btn btn-sm ${pendingAttendance[attendee._id] === 'present' ? 'btn-success' : 'btn-secondary'}`}
+                        onClick={() => onAttendanceSelect?.(attendee._id, 'present')}
+                        id={`mark-present-${attendee._id}`}
+                      >
+                        Present
+                      </button>
+                      <button
+                        className={`btn btn-sm ${pendingAttendance[attendee._id] === 'absent' ? 'btn-danger' : 'btn-secondary'}`}
+                        onClick={() => onAttendanceSelect?.(attendee._id, 'absent')}
+                        id={`mark-absent-${attendee._id}`}
+                      >
+                        Absent
+                      </button>
+                      <button
+                        className="btn btn-sm btn-success"
+                        onClick={() => onAttendanceConfirm?.(attendee._id)}
+                        disabled={!pendingAttendance[attendee._id]}
+                        id={`confirm-attendance-${attendee._id}`}
+                        title="Confirm selection (cannot be changed later)"
+                      >
+                        ✓
+                      </button>
+                    </div>
+                  )
                 ) : (
                   <span className="text-xs text-slate-400">
                     {isEventDay ? 'Unavailable for current status' : 'Available on event day'}
