@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, FormEvent } from 'react';
-import styles from './RegistrationForm.module.css';
 
 interface Props {
   onSubmit: (data: { name: string; email: string }) => Promise<void>;
@@ -32,8 +31,9 @@ export default function RegistrationForm({ onSubmit, disabled = false, statusMes
       setSuccess('🎉 Registration successful! Check your email for confirmation.');
       setName('');
       setEmail('');
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Registration failed. Please try again.');
+    } catch (err: unknown) {
+      const message = (err as { response?: { data?: { message?: string } } }).response?.data?.message;
+      setError(message || 'Registration failed. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -41,11 +41,11 @@ export default function RegistrationForm({ onSubmit, disabled = false, statusMes
 
   if (disabled) {
     return (
-      <div className={styles.disabledContainer}>
-        <div className={styles.disabledIcon}>
+      <div className="card space-y-3 p-6 text-center">
+        <div className="text-4xl">
           {statusMessage === 'full' ? '🔒' : statusMessage === 'cancelled' ? '🚫' : '⏱️'}
         </div>
-        <p className={styles.disabledText}>
+        <p className="text-sm text-slate-600">
           {statusMessage === 'full' && 'This event is at full capacity.'}
           {statusMessage === 'cancelled' && 'This event has been cancelled.'}
           {statusMessage === 'closed' && 'Registration for this event has closed.'}
@@ -55,14 +55,14 @@ export default function RegistrationForm({ onSubmit, disabled = false, statusMes
   }
 
   return (
-    <div className={styles.container}>
-      <h3 className={styles.heading}>Register for this Event</h3>
+    <div className="card space-y-4 p-5 sm:p-6">
+      <h3 className="text-lg font-bold text-slate-900">Register for this Event</h3>
 
       {error && <div className="alert alert-error">{error}</div>}
       {success && <div className="alert alert-success">{success}</div>}
 
       {!success && (
-        <form onSubmit={handleSubmit} className={styles.form} id="registration-form">
+        <form onSubmit={handleSubmit} className="space-y-4" id="registration-form">
           <div className="form-group">
             <label className="form-label" htmlFor="reg-name">Your Name *</label>
             <input
@@ -90,7 +90,7 @@ export default function RegistrationForm({ onSubmit, disabled = false, statusMes
             />
           </div>
 
-          <button type="submit" className="btn btn-primary btn-lg" disabled={loading} id="reg-submit-btn" style={{ width: '100%' }}>
+          <button type="submit" className="btn btn-primary btn-lg w-full" disabled={loading} id="reg-submit-btn">
             {loading ? 'Registering...' : '🎟️ Register Now'}
           </button>
         </form>

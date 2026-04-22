@@ -2,21 +2,14 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { isAuthenticated, getUser, clearAuth } from '@/lib/auth';
 import { User } from '@/types';
-import styles from './Navbar.module.css';
 
 export default function Navbar() {
   const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<User | null>(() => (isAuthenticated() ? getUser() : null));
   const [menuOpen, setMenuOpen] = useState(false);
-
-  useEffect(() => {
-    if (isAuthenticated()) {
-      setUser(getUser());
-    }
-  }, []);
 
   const handleLogout = () => {
     clearAuth();
@@ -25,35 +18,35 @@ export default function Navbar() {
   };
 
   return (
-    <nav className={styles.nav}>
-      <div className={styles.container}>
-        <Link href="/" className={styles.logo}>
-          <span className={styles.logoIcon}>⚡</span>
-          <span className={styles.logoText}>EventFlow</span>
+    <nav className="sticky top-0 z-50 border-b border-slate-200/70 bg-white/90 backdrop-blur">
+      <div className="app-shell flex h-16 items-center justify-between">
+        <Link href="/" className="flex items-center gap-2">
+          <span className="flex size-8 items-center justify-center rounded-lg bg-indigo-600 text-white">⚡</span>
+          <span className="text-lg font-extrabold tracking-tight text-slate-900">EventFlow</span>
         </Link>
 
-        <div className={styles.actions}>
+        <div className="flex items-center gap-2">
           {user ? (
             <>
               <Link href="/dashboard" className="btn btn-ghost">
                 Dashboard
               </Link>
-              <div className={styles.userMenu}>
+              <div className="relative">
                 <button
-                  className={styles.avatar}
+                  className="flex size-10 items-center justify-center rounded-full bg-slate-900 text-sm font-semibold text-white"
                   onClick={() => setMenuOpen(!menuOpen)}
                   id="user-menu-btn"
                 >
                   {user.name.charAt(0).toUpperCase()}
                 </button>
                 {menuOpen && (
-                  <div className={styles.dropdown}>
-                    <div className={styles.dropdownHeader}>
+                  <div className="absolute right-0 top-12 w-64 rounded-xl border border-slate-200 bg-white p-3 shadow-lg">
+                    <div className="flex flex-col text-sm">
                       <strong>{user.name}</strong>
-                      <span>{user.email}</span>
+                      <span className="text-slate-500">{user.email}</span>
                     </div>
-                    <hr className={styles.divider} />
-                    <button onClick={handleLogout} className={styles.dropdownItem} id="logout-btn">
+                    <hr className="my-3 border-slate-200" />
+                    <button onClick={handleLogout} className="btn btn-ghost w-full justify-start" id="logout-btn">
                       🚪 Logout
                     </button>
                   </div>

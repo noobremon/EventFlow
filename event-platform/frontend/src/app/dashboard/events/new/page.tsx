@@ -23,8 +23,8 @@ export default function NewEventPage() {
   };
 
   return (
-    <div className="animate-fadeIn">
-      <div className="page-header">
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="page-title">Create Event</h1>
           <p className="page-subtitle">Set up a new event using a template or from scratch</p>
@@ -34,20 +34,21 @@ export default function NewEventPage() {
       {templateData === null ? (
         <TemplateSelector onSelect={setTemplateData} />
       ) : (
-        <div className="card" style={{ maxWidth: 700 }}>
+        <div className="space-y-4">
           <button
             className="btn btn-ghost"
             onClick={() => setTemplateData(null)}
-            style={{ marginBottom: 16 }}
           >
             ← Back to templates
           </button>
-          <EventForm
-            initialData={templateData}
-            onSubmit={handleCreate}
-            loading={loading}
-            submitLabel="Create Event"
-          />
+          <div className="mx-auto max-w-4xl">
+            <EventForm
+              initialData={templateData}
+              onSubmit={handleCreate}
+              loading={loading}
+              submitLabel="Create Event"
+            />
+          </div>
         </div>
       )}
     </div>

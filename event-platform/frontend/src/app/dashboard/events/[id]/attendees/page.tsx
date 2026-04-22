@@ -19,10 +19,6 @@ export default function AttendeesPage() {
   const [statusFilter, setStatusFilter] = useState('');
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    fetchAttendees();
-  }, [eventId, search, statusFilter]);
-
   const fetchAttendees = async () => {
     try {
       const queryParams = new URLSearchParams();
@@ -32,27 +28,36 @@ export default function AttendeesPage() {
       const { data } = await api.get(`/rsvps/event/${eventId}?${queryParams.toString()}`);
       setAttendees(data.data.attendees);
       setEvent(data.data.event);
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to load attendees');
+    } catch (err: unknown) {
+      const message = (err as { response?: { data?: { message?: string } } }).response?.data?.message;
+      setError(message || 'Failed to load attendees');
     } finally {
       setLoading(false);
     }
   };
+  
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchAttendees();
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [eventId, search, statusFilter]);
 
   const handleStatusChange = async (rsvpId: string, status: string) => {
     setActionLoading(rsvpId);
     try {
       await api.patch(`/rsvps/${rsvpId}/status`, { status });
       await fetchAttendees();
-    } catch (err: any) {
-      alert(err.response?.data?.message || 'Failed to update status');
+    } catch (err: unknown) {
+      const message = (err as { response?: { data?: { message?: string } } }).response?.data?.message;
+      alert(message || 'Failed to update status');
     } finally {
       setActionLoading(null);
     }
   };
 
   if (loading) {
-    return <div className="loading-container"><div className="spinner"></div></div>;
+    return <div className="flex min-h-[50vh] items-center justify-center"><div className="size-10 animate-spin rounded-full border-4 border-slate-200 border-t-indigo-600"></div></div>;
   }
 
   if (error) {
@@ -60,13 +65,12 @@ export default function AttendeesPage() {
   }
 
   return (
-    <div className="animate-fadeIn">
-      <div className="page-header">
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <Link
             href={`/dashboard/events/${eventId}`}
-            className="btn btn-ghost"
-            style={{ marginBottom: 8, marginLeft: -12 }}
+            className="btn btn-ghost -ml-3 mb-2"
           >
             ← Back to Event
           </Link>
@@ -77,9 +81,9 @@ export default function AttendeesPage() {
         </div>
       </div>
 
-      <div className="filter-bar">
+      <div className="card flex flex-col gap-3 p-4 sm:flex-row sm:items-center">
         <input
-          className="form-input search-input"
+          className="form-input sm:flex-1"
           type="text"
           placeholder="🔍 Search by name or email..."
           value={search}
@@ -91,7 +95,7 @@ export default function AttendeesPage() {
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
           id="filter-attendee-status"
-          style={{ width: 160 }}
+          style={{ width: 180 }}
         >
           <option value="">All Statuses</option>
           <option value="pending">Pending</option>

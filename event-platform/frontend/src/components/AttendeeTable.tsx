@@ -1,7 +1,6 @@
 'use client';
 
 import { RSVP } from '@/types';
-import styles from './AttendeeTable.module.css';
 
 interface Props {
   attendees: RSVP[];
@@ -11,47 +10,49 @@ interface Props {
 }
 
 export default function AttendeeTable({ attendees, registrationMode, onStatusChange, loading }: Props) {
+  const isShortlistedMode = registrationMode === 'shortlisted';
+
   if (attendees.length === 0) {
     return (
-      <div className="empty-state">
-        <div className="empty-state-icon">👥</div>
-        <h3 className="empty-state-title">No attendees yet</h3>
-        <p className="empty-state-text">Share your event link to start getting registrations</p>
+      <div className="card rounded-2xl p-10 text-center">
+        <div className="text-5xl">👥</div>
+        <h3 className="mt-4 text-xl font-bold text-slate-900">No attendees yet</h3>
+        <p className="mt-2 text-sm text-slate-600">Share your event link to start getting registrations.</p>
       </div>
     );
   }
 
   return (
-    <div className="table-container">
-      <table className="table" id="attendees-table">
-        <thead>
+    <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <table className="min-w-full text-left text-sm" id="attendees-table">
+        <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-600">
           <tr>
-            <th>Name</th>
-            <th>Email</th>
-            <th>Status</th>
-            <th>Registered</th>
-            <th>Actions</th>
+            <th className="px-4 py-3">Name</th>
+            <th className="px-4 py-3">Email</th>
+            <th className="px-4 py-3">Status</th>
+            <th className="px-4 py-3">Registered</th>
+            <th className="px-4 py-3">{isShortlistedMode ? 'Review Actions' : 'Actions'}</th>
           </tr>
         </thead>
         <tbody>
           {attendees.map((attendee) => (
-            <tr key={attendee._id} id={`attendee-${attendee._id}`}>
-              <td>
+            <tr key={attendee._id} id={`attendee-${attendee._id}`} className="border-t border-slate-100">
+              <td className="px-4 py-3">
                 <strong>{attendee.name}</strong>
               </td>
-              <td className={styles.email}>{attendee.email}</td>
-              <td>
+              <td className="max-w-52 truncate px-4 py-3 text-slate-600">{attendee.email}</td>
+              <td className="px-4 py-3">
                 <span className={`badge badge-${attendee.status}`}>{attendee.status}</span>
               </td>
-              <td className={styles.date}>
+              <td className="whitespace-nowrap px-4 py-3 text-slate-600">
                 {new Date(attendee.createdAt).toLocaleDateString('en-US', {
                   month: 'short',
                   day: 'numeric',
                   year: 'numeric',
                 })}
               </td>
-              <td>
-                <div className={styles.actions}>
+              <td className="px-4 py-3">
+                <div className="flex flex-wrap gap-2">
                   {attendee.status === 'pending' && (
                     <>
                       <button
@@ -78,7 +79,7 @@ export default function AttendeeTable({ attendees, registrationMode, onStatusCha
                       onClick={() => onStatusChange(attendee._id, 'revoked')}
                       disabled={loading === attendee._id}
                       id={`revoke-${attendee._id}`}
-                      style={{ color: 'var(--danger)' }}
+                      style={{ color: '#e11d48' }}
                     >
                       Revoke
                     </button>
@@ -94,7 +95,7 @@ export default function AttendeeTable({ attendees, registrationMode, onStatusCha
                     </button>
                   )}
                   {attendee.status === 'revoked' && (
-                    <span className={styles.noActions}>—</span>
+                    <span className="text-slate-400">—</span>
                   )}
                 </div>
               </td>

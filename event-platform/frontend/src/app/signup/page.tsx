@@ -6,7 +6,6 @@ import Link from 'next/link';
 import api from '@/lib/api';
 import { setAuth } from '@/lib/auth';
 import Navbar from '@/components/Navbar';
-import styles from '../login/page.module.css';
 
 export default function SignupPage() {
   const router = useRouter();
@@ -30,8 +29,9 @@ export default function SignupPage() {
       const { data } = await api.post('/auth/signup', { name, email, password });
       setAuth(data.data.token, data.data.user);
       router.push('/dashboard');
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Signup failed');
+    } catch (err: unknown) {
+      const message = (err as { response?: { data?: { message?: string } } }).response?.data?.message;
+      setError(message || 'Signup failed');
     } finally {
       setLoading(false);
     }
@@ -40,16 +40,16 @@ export default function SignupPage() {
   return (
     <>
       <Navbar />
-      <main className={styles.container}>
-        <div className={styles.formWrapper}>
-          <div className={styles.header}>
-            <h1 className={styles.title}>Create Account</h1>
-            <p className={styles.subtitle}>Start organizing amazing events</p>
+      <main className="app-shell py-10">
+        <div className="mx-auto max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+          <div className="mb-6 text-center">
+            <h1 className="text-2xl font-extrabold tracking-tight text-slate-900">Create Account</h1>
+            <p className="mt-1 text-sm text-slate-600">Start organizing amazing events</p>
           </div>
 
           {error && <div className="alert alert-error">{error}</div>}
 
-          <form onSubmit={handleSubmit} className={styles.form} id="signup-form">
+          <form onSubmit={handleSubmit} className="space-y-4" id="signup-form">
             <div className="form-group">
               <label className="form-label" htmlFor="signup-name">Full Name</label>
               <input
@@ -90,14 +90,14 @@ export default function SignupPage() {
               />
             </div>
 
-            <button type="submit" className="btn btn-primary btn-lg" disabled={loading} id="signup-submit" style={{ width: '100%' }}>
+            <button type="submit" className="btn btn-primary btn-lg w-full" disabled={loading} id="signup-submit">
               {loading ? 'Creating account...' : 'Create Account'}
             </button>
           </form>
 
-          <p className={styles.footer}>
+          <p className="mt-6 text-center text-sm text-slate-600">
             Already have an account?{' '}
-            <Link href="/login" className={styles.link}>Log in</Link>
+            <Link href="/login" className="font-semibold text-indigo-600 hover:text-indigo-700">Log in</Link>
           </p>
         </div>
       </main>

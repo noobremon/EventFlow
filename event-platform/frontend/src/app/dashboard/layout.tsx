@@ -4,17 +4,14 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { isAuthenticated } from '@/lib/auth';
 import Navbar from '@/components/Navbar';
-import styles from './layout.module.css';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const [ready, setReady] = useState(false);
+  const [ready] = useState(() => isAuthenticated());
 
   useEffect(() => {
     if (!isAuthenticated()) {
       router.push('/login');
-    } else {
-      setReady(true);
     }
   }, [router]);
 
@@ -22,8 +19,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     return (
       <>
         <Navbar />
-        <div className="loading-container">
-          <div className="spinner"></div>
+        <div className="app-shell flex min-h-[60vh] items-center justify-center">
+          <div className="size-10 animate-spin rounded-full border-4 border-slate-200 border-t-indigo-600"></div>
         </div>
       </>
     );
@@ -32,8 +29,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   return (
     <>
       <Navbar />
-      <main className={styles.main}>
-        <div className="container">{children}</div>
+      <main className="py-8 sm:py-10">
+        <div className="app-shell">{children}</div>
       </main>
     </>
   );
