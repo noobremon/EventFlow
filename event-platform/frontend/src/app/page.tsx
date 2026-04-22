@@ -85,9 +85,11 @@ export default function HomePage() {
           </div>
         </section>
 
-        <footer className="border-t border-slate-200 bg-white py-6">
-          <div className="app-shell">
-            <p className="text-center text-sm text-slate-500">© 2026 EventFlow. Built with ❤️ for event organizers.</p>
+        <footer className="relative overflow-hidden border-t border-indigo-300/20 bg-gradient-to-r from-indigo-950 via-violet-950 to-fuchsia-950 py-8">
+          <div className="pointer-events-none absolute -top-16 left-12 size-40 rounded-full bg-fuchsia-500/30 blur-3xl"></div>
+          <div className="pointer-events-none absolute -bottom-20 right-10 size-52 rounded-full bg-indigo-500/30 blur-3xl"></div>
+          <div className="app-shell relative">
+            <p className="text-center text-sm font-medium text-indigo-100">© 2026 EventFlow. Built with ❤️ for event organizers.</p>
           </div>
         </footer>
       </main>
