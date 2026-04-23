@@ -71,8 +71,15 @@ const updateEvent = async (eventId, organizerId, data) => {
       const oldVal = event[field];
       const newVal = data[field];
 
-      // Compare as strings to handle dates / booleans cleanly
-      if (String(oldVal) !== String(newVal) && notifiableFields[field]) {
+      // Handle Date specifically
+      let isChanged = false;
+      if (field === 'dateTime') {
+        isChanged = new Date(oldVal).getTime() !== new Date(newVal).getTime();
+      } else {
+        isChanged = String(oldVal) !== String(newVal);
+      }
+
+      if (isChanged && notifiableFields[field]) {
         if (field === 'dateTime') {
           changes.push(
             `Date/Time changed to ${new Date(newVal).toLocaleString()}`

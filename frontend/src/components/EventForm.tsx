@@ -47,7 +47,11 @@ export default function EventForm({ initialData, onSubmit, loading = false, subm
     }
 
     try {
-      await onSubmit(form);
+      const submissionData = { ...form };
+      if (submissionData.dateTime) {
+        submissionData.dateTime = new Date(submissionData.dateTime).toISOString();
+      }
+      await onSubmit(submissionData);
     } catch (err: unknown) {
       const message = (err as { response?: { data?: { message?: string } } }).response?.data?.message;
       setError(message || 'Something went wrong');

@@ -20,6 +20,17 @@ export default function EventDetailPage() {
   const [copySuccess, setCopySuccess] = useState(false);
   const [downloadingCSV, setDownloadingCSV] = useState(false);
 
+  const toLocalDatetimeString = (isoString: string) => {
+    if (!isoString) return '';
+    const date = new Date(isoString);
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    const h = String(date.getHours()).padStart(2, '0');
+    const min = String(date.getMinutes()).padStart(2, '0');
+    return `${y}-${m}-${d}T${h}:${min}`;
+  };
+
   const fetchEvent = async () => {
     try {
       const { data } = await api.get(`/events/${eventId}`);
@@ -176,7 +187,7 @@ export default function EventDetailPage() {
             initialData={{
               title: event.title,
               description: event.description,
-              dateTime: event.dateTime.slice(0, 16),
+              dateTime: toLocalDatetimeString(event.dateTime),
               venue: event.venue,
               isOnline: event.isOnline,
               onlineLink: event.onlineLink,
