@@ -23,9 +23,22 @@ app.use(
   })
 );
 
-// Health check
+// Root Health check for Render Cold Start
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString(), message: 'Render cold start wake up successful' });
+});
+
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// Root endpoints to verify API status
+app.get('/', (req, res) => {
+  res.json({ message: 'Event Platform API is running' });
+});
+
+app.get('/api', (req, res) => {
+  res.json({ message: 'Event Platform API root' });
 });
 
 // API Routes

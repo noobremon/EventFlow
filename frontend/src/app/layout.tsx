@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { ColdStart } from "@/components/ColdStart";
 
 export const metadata: Metadata = {
   title: "EventFlow — Event Management Platform",
@@ -13,7 +14,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <ColdStart />
+        {children}
+      </body>
     </html>
   );
 }
