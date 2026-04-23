@@ -4,51 +4,53 @@ This is an MCP (Model Context Protocol) server that provides AI assistants with 
 
 ## Architecture
 
-This service is entirely decoupled from the Express backend and connects directly to the MongoDB database using `pymongo`. It uses the official `mcp` SDK via `FastMCP`.
+This service connects directly to the MongoDB database using `pymongo`. It is configured to run as a cloud-hosted Server-Sent Events (SSE) web service.
 
-## Setup
+## 🚀 Step 1: Deploy to Render (For the Admin)
 
-1. Make sure you have Python 3.10+ installed.
-2. Create and activate a virtual environment:
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows use: venv\Scripts\activate
-   ```
-3. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-4. Configure environment variables:
-   Copy `.env.example` to `.env` and configure your `MONGODB_URI`.
-   ```bash
-   cp .env.example .env
-   ```
+To make this available to your client without them needing to install Python:
+1. Push this code to GitHub.
+2. Go to [Render.com](https://dashboard.render.com) and create a **New Web Service**.
+3. Connect your GitHub repository.
+4. Use these exact settings:
+   - **Root Directory:** `mcp-server`
+   - **Environment:** `Python 3`
+   - **Build Command:** `pip install -r requirements.txt`
+   - **Start Command:** `python server.py`
+5. Add your **Environment Variable**:
+   - `MONGODB_URI` = (Your production MongoDB connection string)
+6. Click **Create Web Service** and wait for it to deploy. You will get a URL like `https://eventflow-mcp.onrender.com`.
 
-## Running the Server
+## 🤝 Step 2: Handoff to the Client
 
-### For Claude Desktop App / Other MCP Clients
-You can add this server to your Claude Desktop config (`claude_desktop_config.json`) like this:
+Once deployed, your client DOES NOT need to download this folder. Just give them these instructions:
+
+1. Download and open the **Claude Desktop** app.
+2. Open the Claude Desktop configuration file:
+   - Mac: `~/Library/Application Support/Claude/claude_desktop_config.json`
+   - Windows: `%APPDATA%\Claude\claude_desktop_config.json`
+3. Paste the following configuration (replace the URL with your actual Render URL + `/sse`):
 
 ```json
 {
   "mcpServers": {
     "eventflow": {
-      "command": "/absolute/path/to/venv/bin/python",
-      "args": ["/absolute/path/to/EventFlow/mcp-server/server.py"]
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/client-sse",
+        "https://YOUR-RENDER-APP-NAME.onrender.com/sse"
+      ]
     }
   }
 }
 ```
 
-### Standalone / Testing
-Run directly (it will wait for MCP JSON-RPC messages on stdin):
-```bash
-python server.py
-```
+4. Restart Claude Desktop. The client can now manage events and registrations using plain English!
 
-## Available Tools
+## Available AI Tools
 
-- `list_events`: List all events in the system (optionally filter by `organizer_id`).
+- `list_events`: List all events in the system.
 - `get_event`: Get full details for a specific event.
 - `list_registrations`: List all attendees for a specific event.
 - `get_registration_summary`: Get a breakdown of registration statuses (approved, pending, etc.).

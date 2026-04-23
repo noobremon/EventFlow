@@ -17,5 +17,7 @@ register_event_tools(mcp)
 register_registration_tools(mcp)
 
 if __name__ == "__main__":
-    # MCP communicates via stdin/stdout by default
-    mcp.run(transport='stdio')
+    # Run the server with SSE transport for cloud deployment
+    # Listen on 0.0.0.0 so it is accessible externally, using Render's PORT
+    port = int(os.environ.get('PORT', 8000))
+    mcp.run(transport='sse', host='0.0.0.0', port=port)

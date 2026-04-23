@@ -2,3 +2,5 @@ mcp
 pymongo
 python-dotenv
 pydantic
+uvicorn
+starlette
