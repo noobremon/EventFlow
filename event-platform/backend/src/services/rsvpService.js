@@ -145,13 +145,16 @@ const changeRSVPStatus = async (rsvpId, organizerId, newStatus) => {
   const emailTypeMap = {
     approved: 'rsvpApproved',
     rejected: 'rsvpRejected',
-    revoked: 'rsvpRevoked',
+    revoked:  'rsvpRevoked',
   };
 
   if (emailTypeMap[newStatus]) {
     await emailService.sendEmail(rsvp.email, emailTypeMap[newStatus], {
       attendeeName: rsvp.name,
-      eventTitle: event.title,
+      eventTitle:   event.title,
+      // Include event details for the approved email
+      eventDate:    event.dateTime,
+      venue:        event.isOnline ? 'Online' : event.venue,
     });
   }
 

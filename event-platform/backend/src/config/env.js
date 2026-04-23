@@ -15,5 +15,10 @@ module.exports = {
     pass: process.env.SMTP_PASS,
     from: process.env.EMAIL_FROM || 'Event Platform <noreply@eventplatform.com>',
   },
+  // Resend API (alternative to SMTP — takes priority if set)
+  resend: {
+    apiKey: process.env.RESEND_API_KEY || null,
+    from: process.env.RESEND_FROM || process.env.EMAIL_FROM || 'Event Platform <noreply@eventplatform.com>',
+  },
   frontendUrl: process.env.FRONTEND_URL || 'http://localhost:3000',
 };

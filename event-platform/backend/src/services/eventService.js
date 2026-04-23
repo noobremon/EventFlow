@@ -38,6 +38,7 @@ const getEventById = async (eventId, organizerId) => {
 
 /**
  * Update an event (owner only).
+ * Notifies registered/approved/pending attendees when important fields change.
  */
 const updateEvent = async (eventId, organizerId, data) => {
   const event = await getEventById(eventId, organizerId);
@@ -52,9 +53,46 @@ const updateEvent = async (eventId, organizerId, data) => {
     'onlineLink', 'capacity', 'registrationMode',
   ];
 
+  // Track which user-visible fields actually changed
+  const notifiableFields = {
+    dateTime:         'Date/Time',
+    venue:            'Venue',
+    isOnline:         'Event format (online/in-person)',
+    onlineLink:       'Online link',
+    capacity:         'Capacity',
+    registrationMode: 'Registration mode',
+    title:            'Event title',
+  };
+
+  const changes = [];
+
   allowedFields.forEach((field) => {
     if (data[field] !== undefined) {
-      event[field] = data[field];
+      const oldVal = event[field];
+      const newVal = data[field];
+
+      // Compare as strings to handle dates / booleans cleanly
+      if (String(oldVal) !== String(newVal) && notifiableFields[field]) {
+        if (field === 'dateTime') {
+          changes.push(
+            `Date/Time changed to ${new Date(newVal).toLocaleString()}`
+          );
+        } else if (field === 'isOnline') {
+          changes.push(newVal ? 'Event changed to Online' : 'Event changed to In-Person');
+        } else if (field === 'capacity') {
+          changes.push(`Capacity updated to ${newVal}`);
+        } else if (field === 'registrationMode') {
+          changes.push(`Registration mode changed to "${newVal}"`);
+        } else if (field === 'venue') {
+          changes.push(`Venue updated to: ${newVal}`);
+        } else if (field === 'title') {
+          changes.push(`Title updated to: ${newVal}`);
+        } else if (field === 'onlineLink') {
+          changes.push('Online link updated');
+        }
+      }
+
+      event[field] = newVal;
     }
   });
 
@@ -64,6 +102,25 @@ const updateEvent = async (eventId, organizerId, data) => {
   }
 
   await event.save();
+
+  // Notify attendees only when user-visible fields changed
+  if (changes.length > 0) {
+    const attendees = await RSVP.find({
+      event: eventId,
+      status: { $in: ['registered', 'approved', 'pending'] },
+    });
+
+    for (const attendee of attendees) {
+      await emailService.sendEmail(attendee.email, 'eventUpdated', {
+        attendeeName: attendee.name,
+        eventTitle: event.title,
+        eventDate: event.dateTime,
+        venue: event.isOnline ? 'Online' : event.venue,
+        changes,
+      });
+    }
+  }
+
   return event;
 };
 
