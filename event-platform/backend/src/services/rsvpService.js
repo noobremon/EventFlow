@@ -47,14 +47,15 @@ const register = async (slug, { name, email }) => {
     await event.save();
   }
 
-  // Send confirmation email
-  const emailType = status === 'registered' ? 'registrationConfirmed' : 'registrationPending';
-  await emailService.sendEmail(email, emailType, {
-    attendeeName: name,
-    eventTitle: event.title,
-    eventDate: event.dateTime,
-    venue: event.isOnline ? 'Online' : event.venue,
-  });
+  // Send confirmation email ONLY for open registration mode
+  if (status === 'registered') {
+    await emailService.sendEmail(email, 'registrationConfirmed', {
+      attendeeName: name,
+      eventTitle: event.title,
+      eventDate: event.dateTime,
+      venue: event.isOnline ? 'Online' : event.venue,
+    });
+  }
 
   return rsvp;
 };

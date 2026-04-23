@@ -6,9 +6,10 @@ interface Props {
   onSubmit: (data: { name: string; email: string }) => Promise<void>;
   disabled?: boolean;
   statusMessage?: string;
+  registrationMode?: string;
 }
 
-export default function RegistrationForm({ onSubmit, disabled = false, statusMessage }: Props) {
+export default function RegistrationForm({ onSubmit, disabled = false, statusMessage, registrationMode = 'open' }: Props) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
@@ -28,7 +29,11 @@ export default function RegistrationForm({ onSubmit, disabled = false, statusMes
     setLoading(true);
     try {
       await onSubmit({ name: name.trim(), email: email.trim() });
-      setSuccess('🎉 Registration successful! Check your email for confirmation.');
+      if (registrationMode === 'shortlisted') {
+        setSuccess('🎉 Registration successful! You will get a confirmation once the organizer accepts the request.');
+      } else {
+        setSuccess('🎉 Registration successful! Check your email for confirmation.');
+      }
       setName('');
       setEmail('');
     } catch (err: unknown) {

@@ -19,10 +19,28 @@ let transporter = null;
 const getTransporter = () => {
   if (transporter) return transporter;
 
-  // ── 1. Resend API ──────────────────────────────────────────────────────────
+  // ── 1. Resend API via SMTP ─────────────────────────────────────────────────
   if (config.resend && config.resend.apiKey) {
-    console.log('📧 Email transport: Resend API');
-    transporter = { type: 'resend' };
+    console.log('📧 Email transport: Resend (SMTP)');
+    
+    // Check if user is trying to send from a generic email (Resend requires verified domains or onboarding@resend.dev)
+    const fromEmail = config.resend.from || '';
+    if (fromEmail.includes('@gmail.com') || fromEmail.includes('@yahoo.com') || fromEmail.includes('@hotmail.com')) {
+      console.warn('⚠️ WARNING: Resend does not allow sending FROM generic email addresses like Gmail.');
+      console.warn('⚠️ You MUST use "onboarding@resend.dev" for testing, or a verified domain.');
+      console.warn('⚠️ Overriding FROM address to onboarding@resend.dev to prevent failure.');
+      config.resend.from = 'Event Platform <onboarding@resend.dev>';
+    }
+
+    transporter = nodemailer.createTransport({
+      host: 'smtp.resend.com',
+      port: 465,
+      secure: true,
+      auth: {
+        user: 'resend',
+        pass: config.resend.apiKey,
+      },
+    });
     return transporter;
   }
 

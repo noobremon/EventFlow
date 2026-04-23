@@ -122,6 +122,7 @@ export default function PublicEventPage() {
               onSubmit={handleRegister}
               disabled={registrationStatus !== 'open'}
               statusMessage={registrationStatus}
+              registrationMode={event.registrationMode}
             />
           </div>
         </div>

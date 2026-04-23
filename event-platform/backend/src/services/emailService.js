@@ -143,41 +143,18 @@ const sendEmail = async (to, templateName, data) => {
     const { subject, html } = template(data);
     const transport = getTransporter();
 
-    // ── Resend API path ────────────────────────────────────────────────────
-    if (transport && transport.type === 'resend') {
-      const response = await fetch('https://api.resend.com/emails', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${config.resend.apiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          from: config.resend.from || config.smtp.from,
-          to: [to],
-          subject,
-          html,
-        }),
-      });
-
-      if (!response.ok) {
-        const err = await response.json().catch(() => ({}));
-        throw new Error(`Resend API error ${response.status}: ${err.message || response.statusText}`);
-      }
-
-      console.log(`📧 [Resend] Email sent to ${to}: ${subject}`);
-      return;
-    }
-
-    // ── Nodemailer / SMTP path ─────────────────────────────────────────────
+    // ── Nodemailer path (handles both SMTP and Resend via SMTP) ────────────
     if (transport) {
+      const fromAddress = config.resend && config.resend.apiKey ? config.resend.from : config.smtp.from;
+      
       await transport.sendMail({
-        from: config.smtp.from,
+        from: fromAddress,
         to,
         subject,
         html,
       });
 
-      console.log(`📧 [SMTP] Email sent to ${to}: ${subject}`);
+      console.log(`📧 Email sent to ${to}: ${subject}`);
       return;
     }
 
