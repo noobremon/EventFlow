@@ -18,6 +18,7 @@ export default function EventDetailPage() {
   const [editMode, setEditMode] = useState(false);
   const [error, setError] = useState('');
   const [copySuccess, setCopySuccess] = useState(false);
+  const [downloadingCSV, setDownloadingCSV] = useState(false);
 
   const fetchEvent = async () => {
     try {
@@ -69,6 +70,26 @@ export default function EventDetailPage() {
     navigator.clipboard.writeText(url);
     setCopySuccess(true);
     setTimeout(() => setCopySuccess(false), 2000);
+  };
+
+  const handleDownloadCSV = async () => {
+    setDownloadingCSV(true);
+    try {
+      const response = await api.get(`/events/${eventId}/export-csv`, {
+        responseType: 'blob'
+      });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `${event?.title.replace(/[^a-z0-9]/gi, '_').toLowerCase() || 'event'}-attendees.csv`);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode?.removeChild(link);
+    } catch (err: unknown) {
+      alert('Failed to download CSV');
+    } finally {
+      setDownloadingCSV(false);
+    }
   };
 
   if (loading) {
@@ -200,9 +221,19 @@ export default function EventDetailPage() {
           <div className="card space-y-4 p-5">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-bold text-slate-900">Attendees</h3>
-              <Link href={`/dashboard/events/${event._id}/attendees`} className="btn btn-primary btn-sm" id="manage-attendees-link">
-                Manage →
-              </Link>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleDownloadCSV}
+                  disabled={downloadingCSV}
+                  className="btn btn-secondary btn-sm"
+                  id="download-csv-btn"
+                >
+                  {downloadingCSV ? 'Downloading...' : '⬇️ CSV'}
+                </button>
+                <Link href={`/dashboard/events/${event._id}/attendees`} className="btn btn-primary btn-sm" id="manage-attendees-link">
+                  Manage →
+                </Link>
+              </div>
             </div>
             <div className="grid grid-cols-3 gap-2 text-center">
               <div className="rounded-xl bg-slate-50 p-3">

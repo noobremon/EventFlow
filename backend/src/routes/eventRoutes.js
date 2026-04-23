@@ -7,6 +7,7 @@ const {
   updateEvent,
   changeEventStatus,
   getPublicEvent,
+  exportEventCSV,
 } = require('../controllers/eventController');
 const { protect } = require('../middleware/auth');
 const validate = require('../middleware/validate');
@@ -21,5 +22,6 @@ router.get('/', getOrganizerEvents);
 router.get('/:id', getEventById);
 router.put('/:id', updateEvent);
 router.patch('/:id/status', validate(['status']), changeEventStatus);
+router.get('/:id/export-csv', exportEventCSV);
 
 module.exports = router;

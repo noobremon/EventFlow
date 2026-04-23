@@ -1,0 +1,4 @@
+mcp
+pymongo
+python-dotenv
+pydantic

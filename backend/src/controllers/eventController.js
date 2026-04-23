@@ -1,4 +1,6 @@
 const eventService = require('../services/eventService');
+const rsvpService = require('../services/rsvpService');
+const { Parser } = require('json2csv');
 
 const createEvent = async (req, res, next) => {
   try {
@@ -58,6 +60,29 @@ const getPublicEvent = async (req, res, next) => {
   }
 };
 
+const exportEventCSV = async (req, res, next) => {
+  try {
+    // rsvpService handles ownership verification
+    const { attendees } = await rsvpService.getEventAttendees(req.params.id, req.user._id);
+
+    const csvData = attendees.map(a => ({
+      name: a.name,
+      email: a.email,
+      status: a.status,
+      registration_date: new Date(a.createdAt).toISOString().split('T')[0]
+    }));
+
+    const json2csvParser = new Parser({ fields: ['name', 'email', 'status', 'registration_date'] });
+    const csv = json2csvParser.parse(csvData);
+
+    res.header('Content-Type', 'text/csv');
+    res.attachment('event-attendees.csv');
+    return res.status(200).send(csv);
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   createEvent,
   getOrganizerEvents,
@@ -65,4 +90,5 @@ module.exports = {
   updateEvent,
   changeEventStatus,
   getPublicEvent,
+  exportEventCSV,
 };
