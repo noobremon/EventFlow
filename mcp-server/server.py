@@ -18,5 +18,10 @@ register_event_tools(mcp)
 register_registration_tools(mcp)
 
 if __name__ == "__main__":
-    # Run the server with SSE transport for cloud deployment
-    mcp.run(transport='sse')
+    # If run with --stdio (e.g. from Claude Desktop), use stdio transport
+    if len(sys.argv) > 1 and sys.argv[1] == "--stdio":
+        mcp.run(transport='stdio')
+    else:
+        # Otherwise, run the server with SSE transport for cloud deployment (Render)
+        mcp.run(transport='sse')
+
