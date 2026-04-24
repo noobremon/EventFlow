@@ -107,6 +107,13 @@ def _lookup_organizer_by_email(organizer_email):
     if organizer_user and organizer_user.get("_id"):
         return organizer_user["_id"]
 
+    organizer_user = db.users.find_one(
+        {"email": re.compile(rf"^\s*{re.escape(normalized_email)}\s*$", re.IGNORECASE)},
+        {"_id": 1},
+    )
+    if organizer_user and organizer_user.get("_id"):
+        return organizer_user["_id"]
+
     return None
 
 
