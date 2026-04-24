@@ -110,7 +110,7 @@ def _lookup_organizer_by_email(organizer_email):
     return None
 
 
-def _resolve_event_query(organizer_email=None, organizer_id=None):
+def _resolve_event_query(organizer_email=None, organizer_id=None, require_explicit_email=False):
     # Backward compatibility: some clients still expose only organizer_id.
     # If it looks like an email, treat it as organizer_email.
     if not organizer_email and organizer_id and "@" in str(organizer_id):
@@ -159,6 +159,14 @@ def _resolve_event_query(organizer_email=None, organizer_id=None):
                 "source": "default_email",
             }
 
+    if require_explicit_email:
+        return None, {
+            "organizerId": None,
+            "organizerEmail": None,
+            "source": "email_required_for_create",
+            "message": "Provide organizer_email to create an event for the correct admin account.",
+        }
+
     if REQUIRE_EXPLICIT_ORGANIZER_SCOPE:
         return None, {
             "organizerId": None,
@@ -191,7 +199,11 @@ def register_event_tools(mcp):
             return json.dumps({"error": "venue is required"}, indent=2)
 
         try:
-            query, scope = _resolve_event_query(organizer_email, organizer_id)
+            query, scope = _resolve_event_query(
+                organizer_email,
+                organizer_id,
+                require_explicit_email=True,
+            )
         except Exception:
             return json.dumps({"error": "Invalid organizer_email/organizer_id format"}, indent=2)
 
@@ -249,6 +261,7 @@ def register_event_tools(mcp):
             return json.dumps(
                 {
                     "success": True,
+                    "database": db.name,
                     "scope": scope,
                     "event": serialized,
                 },
