@@ -40,3 +40,7 @@ We have built a custom AI integration that allows you to manage your events and 
 - *"How many people are registered for my upcoming event?"*
 - *"Give me a summary of all pending registrations."*
 - *"Update John Doe's registration status to approved."*
+
+### Accurate event counts
+
+Use the `get_event_summary` tool when you need exact event totals. It returns the total number of events plus a status breakdown where `published` is reported as `live` to match the project wording.
