@@ -17,8 +17,12 @@ if exist "%LOCALAPPDATA%\Packages\Claude_pzs8sxrjxfjjc" (
 echo {
 echo   "mcpServers": {
 echo     "eventflow": {
-echo       "type": "sse",
-echo       "url": "https://eventflow-jp3o.onrender.com/sse"
+echo       "command": "npx",
+echo       "args": [
+echo         "-y",
+echo         "mcp-remote@latest",
+echo         "https://eventflow-jp3o.onrender.com/sse"
+echo       ]
 echo     }
 echo   }
 echo }

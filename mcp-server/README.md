@@ -20,8 +20,12 @@ We have built a custom AI integration that allows you to manage your events and 
 {
   "mcpServers": {
     "eventflow": {
-      "type": "sse",
-      "url": "https://eventflow-jp3o.onrender.com/sse"
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-remote@latest",
+        "https://eventflow-jp3o.onrender.com/sse"
+      ]
     }
   }
 }
