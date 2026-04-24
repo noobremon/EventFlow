@@ -47,4 +47,4 @@ Use the `get_event_summary` tool when you need exact event totals. It returns th
 
 For live-event details that must match the latest website state, use `get_live_event_details`. This tool always fetches fresh data from MongoDB.
 
-If your database has multiple organizers, set `DEFAULT_ORGANIZER_ID` in MCP env so Claude Desktop and Claude Web resolve the same organizer scope as your website session.
+If your database has multiple organizers, pass `organizer_email` to the tool. Email is the preferred way to resolve the correct account when more than one admin exists.
