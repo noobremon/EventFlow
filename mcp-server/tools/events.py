@@ -3,7 +3,11 @@ from datetime import datetime, timezone
 from bson import ObjectId
 from services.db import db
 from tools.utils import serialize_doc
-from config.settings import DEFAULT_ORGANIZER_ID
+from config.settings import (
+    DEFAULT_ORGANIZER_ID,
+    DEFAULT_ORGANIZER_EMAIL,
+    REQUIRE_EXPLICIT_ORGANIZER_SCOPE,
+)
 
 
 def _normalize_event_status(status):
@@ -61,6 +65,18 @@ def _resolve_event_query(organizer_id=None):
             "source": "default_env",
         }
 
+    if DEFAULT_ORGANIZER_EMAIL:
+        organizer_user = db.users.find_one(
+            {"email": DEFAULT_ORGANIZER_EMAIL},
+            {"_id": 1},
+        )
+        if organizer_user and organizer_user.get("_id"):
+            organizer_oid = _to_object_id(organizer_user["_id"])
+            return {"organizer": organizer_oid}, {
+                "organizerId": str(organizer_oid),
+                "source": "default_email",
+            }
+
     distinct_organizers = list(db.events.distinct("organizer"))
     if len(distinct_organizers) == 1:
         organizer = distinct_organizers[0]
@@ -68,6 +84,14 @@ def _resolve_event_query(organizer_id=None):
         return {"organizer": organizer_oid}, {
             "organizerId": str(organizer_oid),
             "source": "auto_single_organizer",
+        }
+
+    if REQUIRE_EXPLICIT_ORGANIZER_SCOPE:
+        return None, {
+            "organizerId": None,
+            "source": "scope_required",
+            "availableOrganizerCount": len(distinct_organizers),
+            "message": "Provide organizer_id or set DEFAULT_ORGANIZER_ID/DEFAULT_ORGANIZER_EMAIL in MCP env.",
         }
 
     return {}, {
@@ -83,6 +107,15 @@ def register_event_tools(mcp):
             query, scope = _resolve_event_query(organizer_id)
         except Exception:
             return json.dumps({"error": "Invalid organizer_id format"})
+
+        if query is None:
+            return json.dumps(
+                {
+                    "error": "Organizer scope required",
+                    "scope": scope,
+                },
+                indent=2,
+            )
                 
         try:
             events = list(db.events.find(query).sort([("updatedAt", -1), ("createdAt", -1)]))
@@ -99,6 +132,15 @@ def register_event_tools(mcp):
             query, scope = _resolve_event_query(organizer_id)
         except Exception:
             return json.dumps({"error": "Invalid organizer_id format"})
+
+        if query is None:
+            return json.dumps(
+                {
+                    "error": "Organizer scope required",
+                    "scope": scope,
+                },
+                indent=2,
+            )
 
         try:
             events = list(db.events.find(query).sort([("updatedAt", -1), ("createdAt", -1)]))
@@ -136,6 +178,15 @@ def register_event_tools(mcp):
         except Exception:
             return json.dumps({"error": "Invalid organizer_id format"})
 
+        if query is None:
+            return json.dumps(
+                {
+                    "error": "Organizer scope required",
+                    "scope": scope,
+                },
+                indent=2,
+            )
+
         query["status"] = "published"
 
         try:
@@ -158,6 +209,29 @@ def register_event_tools(mcp):
                     "asOf": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
                     "scope": scope,
                     "liveEvent": serialized,
+                },
+                indent=2,
+            )
+        except Exception as e:
+            return json.dumps({"error": str(e)})
+
+    @mcp.tool()
+    def get_event_scope_diagnostics() -> str:
+        """Returns scope resolution diagnostics to verify Web/Desktop are using the same organizer context."""
+        try:
+            query, scope = _resolve_event_query(None)
+            organizer_count = len(list(db.events.distinct("organizer")))
+            return json.dumps(
+                {
+                    "asOf": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+                    "requireExplicitScope": REQUIRE_EXPLICIT_ORGANIZER_SCOPE,
+                    "defaults": {
+                        "organizerId": DEFAULT_ORGANIZER_ID,
+                        "organizerEmail": DEFAULT_ORGANIZER_EMAIL,
+                    },
+                    "resolvedScope": scope,
+                    "queryResolved": query is not None,
+                    "distinctOrganizerCount": organizer_count,
                 },
                 indent=2,
             )

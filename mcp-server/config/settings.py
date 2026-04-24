@@ -16,3 +16,8 @@ if os.path.exists(BACKEND_ENV_PATH):
 
 MONGO_URI = os.getenv("MONGODB_URI", "mongodb://localhost:27017/event-platform")
 DEFAULT_ORGANIZER_ID = os.getenv("DEFAULT_ORGANIZER_ID", "").strip() or None
+DEFAULT_ORGANIZER_EMAIL = os.getenv("DEFAULT_ORGANIZER_EMAIL", "").strip().lower() or None
+REQUIRE_EXPLICIT_ORGANIZER_SCOPE = (
+	os.getenv("REQUIRE_EXPLICIT_ORGANIZER_SCOPE", "true").strip().lower()
+	in ("1", "true", "yes", "on")
+)
