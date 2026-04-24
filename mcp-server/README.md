@@ -40,6 +40,7 @@ We have built a custom AI integration that allows you to manage your events and 
 - *"How many people are registered for my upcoming event?"*
 - *"Give me a summary of all pending registrations."*
 - *"Update John Doe's registration status to approved."*
+- *"Create an event with title, date-time, and venue; keep the rest as TBD."*
 
 ### Accurate event counts
 

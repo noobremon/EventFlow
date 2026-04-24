@@ -1,4 +1,5 @@
 import json
+import re
 from datetime import datetime, timezone
 from bson import ObjectId
 from services.db import db
@@ -8,6 +9,15 @@ from config.settings import (
     DEFAULT_ORGANIZER_EMAIL,
     REQUIRE_EXPLICIT_ORGANIZER_SCOPE,
 )
+
+
+LAST_CREATED_EVENT_CONTEXT = {
+    "asOf": None,
+    "eventId": None,
+    "eventTitle": None,
+    "organizerId": None,
+    "organizerEmail": None,
+}
 
 
 def _normalize_event_status(status):
@@ -50,6 +60,36 @@ def _to_object_id(value):
     if isinstance(value, ObjectId):
         return value
     return ObjectId(str(value))
+
+
+def _slugify(value):
+    slug = re.sub(r"[^a-z0-9]+", "-", str(value).strip().lower()).strip("-")
+    return slug or "event"
+
+
+def _ensure_unique_slug(base_slug):
+    slug = base_slug
+    index = 2
+    while db.events.find_one({"slug": slug}, {"_id": 1}) is not None:
+        slug = f"{base_slug}-{index}"
+        index += 1
+    return slug
+
+
+def _parse_event_datetime(value):
+    if not value:
+        raise ValueError("date_time is required")
+
+    text = str(value).strip()
+    normalized = text.replace("Z", "+00:00")
+    parsed = datetime.fromisoformat(normalized)
+
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    else:
+        parsed = parsed.astimezone(timezone.utc)
+
+    return parsed
 
 
 def _lookup_organizer_by_email(organizer_email):
@@ -134,6 +174,132 @@ def _resolve_event_query(organizer_email=None, organizer_id=None):
     }
 
 def register_event_tools(mcp):
+    @mcp.tool()
+    def create_event(
+        title: str,
+        date_time: str,
+        venue: str,
+        organizer_email: str = None,
+        organizer_id: str = None,
+    ) -> str:
+        """Creates a draft event from minimal details (title, date_time, venue) and fills remaining fields with TBD/default values."""
+        if not title or not str(title).strip():
+            return json.dumps({"error": "title is required"}, indent=2)
+        if not date_time or not str(date_time).strip():
+            return json.dumps({"error": "date_time is required"}, indent=2)
+        if not venue or not str(venue).strip():
+            return json.dumps({"error": "venue is required"}, indent=2)
+
+        try:
+            query, scope = _resolve_event_query(organizer_email, organizer_id)
+        except Exception:
+            return json.dumps({"error": "Invalid organizer_email/organizer_id format"}, indent=2)
+
+        if query is None or "organizer" not in query:
+            return json.dumps(
+                {
+                    "error": "Organizer scope required",
+                    "scope": scope,
+                },
+                indent=2,
+            )
+
+        try:
+            event_dt = _parse_event_datetime(date_time)
+        except Exception:
+            return json.dumps(
+                {
+                    "error": "Invalid date_time. Use an ISO format like 2026-06-01T18:30:00Z.",
+                },
+                indent=2,
+            )
+
+        try:
+            base_slug = _slugify(title)
+            slug = _ensure_unique_slug(base_slug)
+
+            doc = {
+                "organizer": query["organizer"],
+                "title": str(title).strip(),
+                "slug": slug,
+                "description": "TBD",
+                "dateTime": event_dt,
+                "venue": str(venue).strip(),
+                "isOnline": False,
+                "onlineLink": "",
+                "capacity": 50,
+                "registrationMode": "open",
+                "status": "draft",
+                "registeredCount": 0,
+                "createdAt": datetime.now(timezone.utc),
+                "updatedAt": datetime.now(timezone.utc),
+            }
+
+            result = db.events.insert_one(doc)
+            created = db.events.find_one({"_id": result.inserted_id})
+            serialized = serialize_doc(created)
+            serialized["statusLabel"] = _normalize_event_status(serialized.get("status"))
+
+            LAST_CREATED_EVENT_CONTEXT["asOf"] = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+            LAST_CREATED_EVENT_CONTEXT["eventId"] = serialized.get("_id")
+            LAST_CREATED_EVENT_CONTEXT["eventTitle"] = serialized.get("title")
+            LAST_CREATED_EVENT_CONTEXT["organizerId"] = scope.get("organizerId")
+            LAST_CREATED_EVENT_CONTEXT["organizerEmail"] = scope.get("organizerEmail")
+
+            return json.dumps(
+                {
+                    "success": True,
+                    "scope": scope,
+                    "event": serialized,
+                },
+                indent=2,
+            )
+        except Exception as e:
+            return json.dumps({"error": str(e)}, indent=2)
+
+    @mcp.tool()
+    def get_create_event_diagnostics(organizer_email: str = None, organizer_id: str = None) -> str:
+        """Returns MCP sync diagnostics: DB name, resolved organizer scope, and latest created event for that scope."""
+        try:
+            query, scope = _resolve_event_query(organizer_email, organizer_id)
+        except Exception:
+            return json.dumps({"error": "Invalid organizer_email/organizer_id format"}, indent=2)
+
+        if query is None:
+            return json.dumps(
+                {
+                    "error": "Organizer scope required",
+                    "scope": scope,
+                },
+                indent=2,
+            )
+
+        latest_event_doc = db.events.find_one(
+            query,
+            sort=[("createdAt", -1), ("updatedAt", -1), ("_id", -1)],
+        )
+        latest_event = serialize_doc(latest_event_doc) if latest_event_doc else None
+
+        if latest_event is not None:
+            latest_event = {
+                "eventId": latest_event.get("_id"),
+                "title": latest_event.get("title"),
+                "status": latest_event.get("status"),
+                "dateTime": latest_event.get("dateTime"),
+                "createdAt": latest_event.get("createdAt"),
+            }
+
+        return json.dumps(
+            {
+                "asOf": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+                "database": db.name,
+                "resolvedScope": scope,
+                "latestEventForScope": latest_event,
+                "lastCreatedFromMcp": LAST_CREATED_EVENT_CONTEXT,
+            },
+            indent=2,
+        )
+
     @mcp.tool()
     def list_events(organizer_email: str = None, organizer_id: str = None) -> str:
         """Always queries MongoDB fresh and returns exact totals/status counts for the resolved organizer scope."""
