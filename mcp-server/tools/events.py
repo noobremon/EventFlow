@@ -1,4 +1,5 @@
 import json
+from datetime import datetime, timezone
 from bson import ObjectId
 from services.db import db
 from tools.utils import serialize_doc
@@ -33,6 +34,7 @@ def _build_event_payload(events):
             status_counts[status_label] = status_counts.get(status_label, 0) + 1
 
     return {
+        "asOf": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
         "total": len(serialized_events),
         "statusCounts": status_counts,
         "events": serialized_events,
@@ -50,7 +52,7 @@ def register_event_tools(mcp):
                 return json.dumps({"error": "Invalid organizer_id format"})
                 
         try:
-            events = list(db.events.find(query))
+            events = list(db.events.find(query).sort([("updatedAt", -1), ("createdAt", -1)]))
             payload = _build_event_payload(events)
             return json.dumps(payload, indent=2)
         except Exception as e:
@@ -67,10 +69,11 @@ def register_event_tools(mcp):
                 return json.dumps({"error": "Invalid organizer_id format"})
 
         try:
-            events = list(db.events.find(query))
+            events = list(db.events.find(query).sort([("updatedAt", -1), ("createdAt", -1)]))
             payload = _build_event_payload(events)
             return json.dumps(
                 {
+                    "asOf": payload["asOf"],
                     "total": payload["total"],
                     "statusCounts": payload["statusCounts"],
                 },

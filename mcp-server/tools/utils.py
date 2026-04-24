@@ -1,4 +1,18 @@
 from bson import ObjectId
+from datetime import timezone
+
+
+def _serialize_datetime(value):
+    if not hasattr(value, "isoformat"):
+        return value
+
+    dt = value
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    else:
+        dt = dt.astimezone(timezone.utc)
+
+    return dt.isoformat().replace("+00:00", "Z")
 
 def serialize_doc(doc):
     if not doc:
@@ -8,10 +22,10 @@ def serialize_doc(doc):
         doc["organizer"] = str(doc["organizer"])
     if "event" in doc and isinstance(doc["event"], ObjectId):
         doc["event"] = str(doc["event"])
-    if "createdAt" in doc and hasattr(doc["createdAt"], "isoformat"):
-        doc["createdAt"] = doc["createdAt"].isoformat()
-    if "updatedAt" in doc and hasattr(doc["updatedAt"], "isoformat"):
-        doc["updatedAt"] = doc["updatedAt"].isoformat()
-    if "dateTime" in doc and hasattr(doc["dateTime"], "isoformat"):
-        doc["dateTime"] = doc["dateTime"].isoformat()
+    if "createdAt" in doc:
+        doc["createdAt"] = _serialize_datetime(doc["createdAt"])
+    if "updatedAt" in doc:
+        doc["updatedAt"] = _serialize_datetime(doc["updatedAt"])
+    if "dateTime" in doc:
+        doc["dateTime"] = _serialize_datetime(doc["dateTime"])
     return doc
