@@ -77,6 +77,14 @@ def _resolve_event_query(organizer_id=None):
                 "source": "default_email",
             }
 
+    latest_user = db.users.find_one({}, {"_id": 1}, sort=[("createdAt", -1), ("_id", -1)])
+    if latest_user and latest_user.get("_id"):
+        organizer_oid = _to_object_id(latest_user["_id"])
+        return {"organizer": organizer_oid}, {
+            "organizerId": str(organizer_oid),
+            "source": "latest_user",
+        }
+
     distinct_organizers = list(db.events.distinct("organizer"))
     if len(distinct_organizers) == 1:
         organizer = distinct_organizers[0]
@@ -86,17 +94,11 @@ def _resolve_event_query(organizer_id=None):
             "source": "auto_single_organizer",
         }
 
-    if REQUIRE_EXPLICIT_ORGANIZER_SCOPE:
-        return None, {
-            "organizerId": None,
-            "source": "scope_required",
-            "availableOrganizerCount": len(distinct_organizers),
-            "message": "Provide organizer_id or set DEFAULT_ORGANIZER_ID/DEFAULT_ORGANIZER_EMAIL in MCP env.",
-        }
-
     return {}, {
         "organizerId": None,
-        "source": "all_organizers",
+        "source": "all_organizers_fallback",
+        "availableOrganizerCount": len(distinct_organizers),
+        "message": "No user records were found, so all-organizer fallback was used.",
     }
 
 def register_event_tools(mcp):
