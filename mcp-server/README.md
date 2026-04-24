@@ -44,3 +44,7 @@ We have built a custom AI integration that allows you to manage your events and 
 ### Accurate event counts
 
 Use the `get_event_summary` tool when you need exact event totals. It returns the total number of events plus a status breakdown where `published` is reported as `live` to match the project wording.
+
+For live-event details that must match the latest website state, use `get_live_event_details`. This tool always fetches fresh data from MongoDB.
+
+If your database has multiple organizers, set `DEFAULT_ORGANIZER_ID` in MCP env so Claude Desktop and Claude Web resolve the same organizer scope as your website session.

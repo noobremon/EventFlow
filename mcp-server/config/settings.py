@@ -15,3 +15,4 @@ if os.path.exists(BACKEND_ENV_PATH):
 	load_dotenv(BACKEND_ENV_PATH, override=False)
 
 MONGO_URI = os.getenv("MONGODB_URI", "mongodb://localhost:27017/event-platform")
+DEFAULT_ORGANIZER_ID = os.getenv("DEFAULT_ORGANIZER_ID", "").strip() or None
