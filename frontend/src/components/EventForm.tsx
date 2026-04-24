@@ -21,6 +21,23 @@ const defaultData: EventFormData = {
   registrationMode: 'open',
 };
 
+const toIsoFromDatetimeLocal = (value: string) => {
+  const localDateTimeMatch = value.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/);
+  if (localDateTimeMatch) {
+    const [, year, month, day, hour, minute] = localDateTimeMatch;
+    return new Date(
+      Number(year),
+      Number(month) - 1,
+      Number(day),
+      Number(hour),
+      Number(minute)
+    ).toISOString();
+  }
+
+  // Fallback for already-normalized ISO values.
+  return new Date(value).toISOString();
+};
+
 export default function EventForm({ initialData, onSubmit, loading = false, submitLabel = 'Create Event' }: Props) {
   const [form, setForm] = useState<EventFormData>({ ...defaultData, ...initialData });
   const [error, setError] = useState('');
@@ -49,7 +66,7 @@ export default function EventForm({ initialData, onSubmit, loading = false, subm
     try {
       const submissionData = { ...form };
       if (submissionData.dateTime) {
-        submissionData.dateTime = new Date(submissionData.dateTime).toISOString();
+        submissionData.dateTime = toIsoFromDatetimeLocal(submissionData.dateTime);
       }
       await onSubmit(submissionData);
     } catch (err: unknown) {
