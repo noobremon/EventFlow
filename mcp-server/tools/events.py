@@ -70,7 +70,12 @@ def _lookup_organizer_by_email(organizer_email):
     return None
 
 
-def _resolve_event_query(organizer_email=None):
+def _resolve_event_query(organizer_email=None, organizer_id=None):
+    # Backward compatibility: some clients still expose only organizer_id.
+    # If it looks like an email, treat it as organizer_email.
+    if not organizer_email and organizer_id and "@" in str(organizer_id):
+        organizer_email = str(organizer_id)
+
     if organizer_email:
         organizer_oid = _lookup_organizer_by_email(organizer_email)
         if organizer_oid:
@@ -84,6 +89,20 @@ def _resolve_event_query(organizer_email=None):
             "source": "email_not_found",
             "message": "No organizer matches the provided email.",
         }
+
+    if organizer_id:
+        try:
+            organizer_oid = _to_object_id(organizer_id)
+            return {"organizer": organizer_oid}, {
+                "organizerId": str(organizer_oid),
+                "source": "argument_id",
+            }
+        except Exception:
+            return None, {
+                "organizerId": str(organizer_id),
+                "source": "invalid_organizer_id",
+                "message": "organizer_id is neither a valid email nor a valid ObjectId.",
+            }
 
     if DEFAULT_ORGANIZER_ID:
         return {"organizer": _to_object_id(DEFAULT_ORGANIZER_ID)}, {
@@ -116,12 +135,12 @@ def _resolve_event_query(organizer_email=None):
 
 def register_event_tools(mcp):
     @mcp.tool()
-    def list_events(organizer_email: str) -> str:
+    def list_events(organizer_email: str = None, organizer_id: str = None) -> str:
         """Always queries MongoDB fresh and returns exact totals/status counts for the resolved organizer scope."""
         try:
-            query, scope = _resolve_event_query(organizer_email)
+            query, scope = _resolve_event_query(organizer_email, organizer_id)
         except Exception:
-            return json.dumps({"error": "Invalid organizer_email format"})
+            return json.dumps({"error": "Invalid organizer_email/organizer_id format"})
 
         if query is None:
             return json.dumps(
@@ -141,12 +160,12 @@ def register_event_tools(mcp):
             return json.dumps({"error": str(e)})
 
     @mcp.tool()
-    def get_event_summary(organizer_email: str) -> str:
+    def get_event_summary(organizer_email: str = None, organizer_id: str = None) -> str:
         """Always queries MongoDB fresh and returns exact event counts for the resolved organizer scope."""
         try:
-            query, scope = _resolve_event_query(organizer_email)
+            query, scope = _resolve_event_query(organizer_email, organizer_id)
         except Exception:
-            return json.dumps({"error": "Invalid organizer_email format"})
+            return json.dumps({"error": "Invalid organizer_email/organizer_id format"})
 
         if query is None:
             return json.dumps(
@@ -186,12 +205,12 @@ def register_event_tools(mcp):
             return json.dumps({"error": str(e)})
 
     @mcp.tool()
-    def get_live_event_details(organizer_email: str) -> str:
+    def get_live_event_details(organizer_email: str = None, organizer_id: str = None) -> str:
         """Always queries MongoDB fresh and returns the most recently updated live (published) event for the resolved organizer scope."""
         try:
-            query, scope = _resolve_event_query(organizer_email)
+            query, scope = _resolve_event_query(organizer_email, organizer_id)
         except Exception:
-            return json.dumps({"error": "Invalid organizer_email format"})
+            return json.dumps({"error": "Invalid organizer_email/organizer_id format"})
 
         if query is None:
             return json.dumps(
@@ -234,7 +253,7 @@ def register_event_tools(mcp):
     def get_event_scope_diagnostics() -> str:
         """Returns scope resolution diagnostics to verify Web/Desktop are using the same organizer context."""
         try:
-            query, scope = _resolve_event_query(None)
+            query, scope = _resolve_event_query(None, None)
             organizer_count = len(list(db.events.distinct("organizer")))
             return json.dumps(
                 {
