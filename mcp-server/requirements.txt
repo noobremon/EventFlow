@@ -4,3 +4,4 @@ python-dotenv
 pydantic
 uvicorn
 starlette
+google-generativeai
