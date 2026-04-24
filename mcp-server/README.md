@@ -47,4 +47,4 @@ Use the `get_event_summary` tool when you need exact event totals. It returns th
 
 For live-event details that must match the latest website state, use `get_live_event_details`. This tool always fetches fresh data from MongoDB.
 
-If your database has multiple organizers, pass `organizer_email` to the tool. Email is the preferred way to resolve the correct account when more than one admin exists.
+If your database has multiple organizers, pass `organizer_email` to the tool. Email is the only supported lookup for event tools.
