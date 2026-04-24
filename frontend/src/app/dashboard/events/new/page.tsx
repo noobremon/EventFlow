@@ -7,6 +7,8 @@ import { EventFormData } from '@/types';
 import TemplateSelector from '@/components/TemplateSelector';
 import EventForm from '@/components/EventForm';
 
+const CREATE_EVENT_AUTOSAVE_KEY = 'eventflow:create-event:draft';
+
 export default function NewEventPage() {
   const router = useRouter();
   const [templateData, setTemplateData] = useState<Partial<EventFormData> | null>(null);
@@ -47,6 +49,7 @@ export default function NewEventPage() {
               onSubmit={handleCreate}
               loading={loading}
               submitLabel="Create Event"
+              autosaveKey={CREATE_EVENT_AUTOSAVE_KEY}
             />
           </div>
         </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, FormEvent } from 'react';
+import { useEffect, useState, FormEvent } from 'react';
 import { EventFormData } from '@/types';
 
 interface Props {
@@ -8,6 +8,7 @@ interface Props {
   onSubmit: (data: EventFormData) => Promise<void>;
   loading?: boolean;
   submitLabel?: string;
+  autosaveKey?: string;
 }
 
 const defaultData: EventFormData = {
@@ -38,11 +39,67 @@ const toIsoFromDatetimeLocal = (value: string) => {
   return new Date(value).toISOString();
 };
 
-export default function EventForm({ initialData, onSubmit, loading = false, submitLabel = 'Create Event' }: Props) {
-  const [form, setForm] = useState<EventFormData>({ ...defaultData, ...initialData });
+const restoreDraft = (rawDraft: string | null): Partial<EventFormData> | null => {
+  if (!rawDraft) return null;
+
+  try {
+    const parsed = JSON.parse(rawDraft) as Partial<EventFormData>;
+    if (!parsed || typeof parsed !== 'object') return null;
+
+    return {
+      title: typeof parsed.title === 'string' ? parsed.title : undefined,
+      description: typeof parsed.description === 'string' ? parsed.description : undefined,
+      dateTime: typeof parsed.dateTime === 'string' ? parsed.dateTime : undefined,
+      venue: typeof parsed.venue === 'string' ? parsed.venue : undefined,
+      isOnline: typeof parsed.isOnline === 'boolean' ? parsed.isOnline : undefined,
+      onlineLink: typeof parsed.onlineLink === 'string' ? parsed.onlineLink : undefined,
+      capacity: typeof parsed.capacity === 'number' ? parsed.capacity : undefined,
+      registrationMode:
+        parsed.registrationMode === 'open' || parsed.registrationMode === 'shortlisted'
+          ? parsed.registrationMode
+          : undefined,
+    };
+  } catch {
+    return null;
+  }
+};
+
+export default function EventForm({
+  initialData,
+  onSubmit,
+  loading = false,
+  submitLabel = 'Create Event',
+  autosaveKey,
+}: Props) {
+  const initialFormState: EventFormData = { ...defaultData, ...initialData };
+  const [form, setForm] = useState<EventFormData>(initialFormState);
   const [error, setError] = useState('');
+  const [hasInteracted, setHasInteracted] = useState(false);
+  const [autosaveStatus, setAutosaveStatus] = useState('');
+
+  useEffect(() => {
+    if (!autosaveKey || typeof window === 'undefined') return;
+
+    const draft = restoreDraft(localStorage.getItem(autosaveKey));
+    if (!draft) return;
+
+    setForm((prev) => ({ ...prev, ...draft }));
+    setAutosaveStatus('Recovered unsaved draft');
+  }, [autosaveKey]);
+
+  useEffect(() => {
+    if (!autosaveKey || !hasInteracted || typeof window === 'undefined') return;
+
+    const timer = setTimeout(() => {
+      localStorage.setItem(autosaveKey, JSON.stringify(form));
+      setAutosaveStatus('Draft autosaved');
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [autosaveKey, form, hasInteracted]);
 
   const handleChange = (field: keyof EventFormData, value: string | number | boolean) => {
+    if (!hasInteracted) setHasInteracted(true);
     setForm((prev) => ({ ...prev, [field]: value }));
   };
 
@@ -69,10 +126,24 @@ export default function EventForm({ initialData, onSubmit, loading = false, subm
         submissionData.dateTime = toIsoFromDatetimeLocal(submissionData.dateTime);
       }
       await onSubmit(submissionData);
+      if (autosaveKey && typeof window !== 'undefined') {
+        localStorage.removeItem(autosaveKey);
+        setAutosaveStatus('');
+      }
     } catch (err: unknown) {
       const message = (err as { response?: { data?: { message?: string } } }).response?.data?.message;
       setError(message || 'Something went wrong');
     }
+  };
+
+  const handleClearDraft = () => {
+    if (!autosaveKey || typeof window === 'undefined') return;
+
+    localStorage.removeItem(autosaveKey);
+    setForm(initialFormState);
+    setHasInteracted(false);
+    setError('');
+    setAutosaveStatus('Draft cleared');
   };
 
   return (
@@ -202,7 +273,21 @@ export default function EventForm({ initialData, onSubmit, loading = false, subm
         </div>
       </div>
 
-      <div className="flex justify-end">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <span className="text-xs text-slate-500" aria-live="polite">
+            {autosaveStatus}
+          </span>
+          {autosaveKey && (
+            <button
+              type="button"
+              className="btn btn-ghost btn-sm"
+              onClick={handleClearDraft}
+            >
+              Clear saved draft
+            </button>
+          )}
+        </div>
         <button type="submit" className="btn btn-primary btn-lg" disabled={loading} id="event-submit-btn">
           {loading ? 'Saving...' : submitLabel}
         </button>
