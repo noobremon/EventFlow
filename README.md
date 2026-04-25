@@ -2,6 +2,8 @@
 
 A production-quality event management platform built with **Next.js**, **Express**, **MongoDB**, and **JWT authentication**.
 
+> **Demo note:** This repo includes a hosted Claude Desktop AI endpoint for EventFlow management, as documented below.
+
 ## Architecture
 
 ```
@@ -136,6 +138,50 @@ Open **http://localhost:3000** in your browser.
 | Auth      | JWT (jsonwebtoken + bcryptjs) |
 | Email     | Nodemailer (SMTP) |
 | Styling   | CSS Modules + Custom Design System |
+
+## AI Assistant Integration
+
+EventFlow includes a custom AI integration for Claude Desktop, letting you manage events and attendees using plain English.
+
+### Connect Claude Desktop
+
+1. Download and install Claude Desktop from https://claude.ai/download.
+2. Open your Claude Desktop config file:
+   - Windows: `%APPDATA%\Claude\claude_desktop_config.json`
+   - macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
+3. Add the following configuration:
+
+```json
+{
+  "mcpServers": {
+    "eventflow": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-remote@latest",
+        "https://eventflow-jp3o.onrender.com/sse"
+      ]
+    }
+  }
+}
+```
+
+4. Restart Claude Desktop completely.
+
+### What you can ask Claude
+
+- "List all my events."
+- "Show me the details for event X."
+- "How many people are registered for my upcoming event?"
+- "Give me a summary of all pending registrations."
+- "Update John Doe's registration status to approved."
+- "Create an event with title, date-time, and venue; keep the rest as TBD."
+
+### Notes
+
+- Use `get_event_summary` for exact event totals and status breakdown.
+- Use `get_live_event_details` to fetch the latest data from MongoDB.
+- If your database has multiple organizers, pass `organizer_email` to the tools.
 
 ## License
 
