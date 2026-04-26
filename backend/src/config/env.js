@@ -21,4 +21,10 @@ module.exports = {
     from: process.env.RESEND_FROM || process.env.EMAIL_FROM || 'Event Platform <noreply@eventplatform.com>',
   },
   frontendUrl: process.env.FRONTEND_URL || 'http://localhost:3000',
+  backendUrl: process.env.BACKEND_URL || null,
+  keepalive: {
+    intervalMinutes: parseInt(process.env.KEEPALIVE_INTERVAL_MINUTES, 10) || 5,
+    backendUrl: process.env.BACKEND_URL || null,
+    mcpUrl: process.env.MCP_URL || null,
+  },
 };

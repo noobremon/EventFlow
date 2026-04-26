@@ -26,6 +26,10 @@ const rsvpSchema = new mongoose.Schema(
       enum: ['pending', 'registered', 'approved', 'rejected', 'revoked'],
       default: 'pending',
     },
+    reminderSent: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );

@@ -121,6 +121,22 @@ const templates = {
       </div>
     `,
   }),
+
+  eventReminder: ({ attendeeName, eventTitle, eventDate, venue }) => ({
+    subject: `⏰ Reminder — ${eventTitle} is Today`,
+    html: `
+      <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: auto; padding: 32px; background: #f8fafc; border-radius: 12px;">
+        <h2 style="color: #1e293b; margin-top: 0;">Event Reminder</h2>
+        <p>Hi <strong>${attendeeName}</strong>,</p>
+        <p>This is a friendly reminder that <strong>${eventTitle}</strong> is happening today.</p>
+        <div style="background: #fff; padding: 16px; border-radius: 8px; margin: 16px 0; border-left: 4px solid #f59e0b;">
+          <p style="margin: 4px 0;"><strong>📅 Date:</strong> ${new Date(eventDate).toLocaleString()}</p>
+          <p style="margin: 4px 0;"><strong>📍 Venue:</strong> ${venue}</p>
+        </div>
+        <p style="color: #64748b; font-size: 14px; margin-bottom: 0;">We look forward to seeing you there!</p>
+      </div>
+    `,
+  }),
 };
 
 /**

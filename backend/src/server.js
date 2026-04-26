@@ -3,6 +3,8 @@ const cors = require('cors');
 const connectDB = require('./config/db');
 const config = require('./config/env');
 const errorHandler = require('./middleware/errorHandler');
+const reminderService = require('./services/reminderService');
+const keepaliveService = require('./services/keepaliveService');
 
 // Route imports
 const authRoutes = require('./routes/authRoutes');
@@ -41,6 +43,10 @@ app.get('/api', (req, res) => {
   res.json({ message: 'Event Platform API root' });
 });
 
+app.get('/api/keepalive', (req, res) => {
+  res.json({ status: 'ok', message: 'Event Platform backend keepalive endpoint' });
+});
+
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/events', eventRoutes);
@@ -57,6 +63,9 @@ app.use(errorHandler);
 // Start server
 const start = async () => {
   await connectDB();
+  reminderService.startReminderScheduler();
+  keepaliveService.startKeepaliveScheduler();
+
   app.listen(config.port, () => {
     console.log(`🚀 Server running on port ${config.port} in ${config.nodeEnv} mode`);
   });
