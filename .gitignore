@@ -1,0 +1,29 @@
+# Local environment files
+*.env
+*.env.*
+
+# Backend ignore patterns
+backend/.env
+backend/.env.example
+
+# MCP server ignore patterns
+mcp-server/.env
+mcp-server/.env.*
+
+# Frontend ignore patterns
+frontend/.env*
+
+# Node dependencies
+node_modules/
+**/node_modules/
+
+# Python virtual environments and caches
+venv/
+**/venv/
+__pycache__/
+*.py[cod]
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*

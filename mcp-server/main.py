@@ -1,8 +1,15 @@
 import os
 import sys
+from pathlib import Path
+from dotenv import load_dotenv
 
 # Add the current directory to sys.path so we can import our modules easily
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+# Load local environment variables if present (for local development only)
+env_path = Path(__file__).parent / '.env'
+if env_path.exists():
+    load_dotenv(env_path)
 
 import google.generativeai as genai
 from starlette.middleware.cors import CORSMiddleware

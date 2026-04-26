@@ -51,18 +51,19 @@ A production-quality event management platform built with **Next.js**, **Express
 ```bash
 # Backend
 cd backend
-cp .env.example .env
 npm install
 
 # Frontend
 cd ../frontend
-cp .env.example .env.local
 npm install
 ```
 
 ### 2. Configure Environment
 
-Edit `backend/.env`:
+For local development, create a local `backend/.env` and/or `mcp-server/.env` file on your machine only.
+These files are ignored by git and should not be committed.
+
+Example `backend/.env`:
 ```env
 MONGODB_URI=mongodb://localhost:27017/event-platform
 JWT_SECRET=your-secret-key
@@ -71,6 +72,12 @@ JWT_SECRET=your-secret-key
 SMTP_HOST=smtp.gmail.com
 SMTP_USER=your-email@gmail.com
 SMTP_PASS=your-app-password
+```
+
+Example `mcp-server/.env`:
+```env
+GEMINI_API_KEY=your-gemini-api-key
+PORT=8000
 ```
 
 ### 3. Run
