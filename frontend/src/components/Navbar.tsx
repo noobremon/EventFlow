@@ -38,29 +38,31 @@ export default function Navbar() {
   }, [menuOpen]);
 
   return (
-    <nav className="sticky top-0 z-50 border-b border-indigo-300/30 bg-gradient-to-r from-indigo-950/90 via-violet-900/90 to-fuchsia-900/90 text-white shadow-[0_8px_30px_rgb(79_70_229/0.35)] backdrop-blur-xl">
-      <div className="app-shell flex h-16 items-center justify-between">
-        <Link href="/" className="flex items-center gap-2">
-          <span className="flex size-8 items-center justify-center rounded-lg bg-white/20 text-white shadow-lg shadow-indigo-500/40">⚡</span>
-          <span className="bg-gradient-to-r from-white to-indigo-100 bg-clip-text text-lg font-extrabold tracking-tight text-transparent">EventFlow</span>
+    <nav className="sticky top-0 z-50 border-b border-white/10 bg-slate-950/85 text-white shadow-[0_12px_40px_rgba(15,23,42,0.35)] backdrop-blur-xl">
+      <div className="app-shell flex h-16 items-center justify-between gap-4">
+        <Link href="/" className="flex items-center gap-3">
+          <span className="flex size-9 items-center justify-center rounded-2xl bg-white/10 text-white shadow-lg shadow-fuchsia-500/20 ring-1 ring-white/15">⚡</span>
+          <span className="bg-linear-to-r from-white via-indigo-100 to-fuchsia-100 bg-clip-text text-lg font-extrabold tracking-tight text-transparent">
+            EventFlow
+          </span>
         </Link>
 
         <div className="flex items-center gap-2">
           {user ? (
             <>
-              <Link href="/dashboard" className="btn border border-white/20 bg-white/10 text-white hover:bg-white/20">
+              <Link href="/dashboard" className="btn border border-white/10 bg-white/10 text-white hover:bg-white/15">
                 Dashboard
               </Link>
               <div className="relative" ref={menuRef}>
                 <button
-                  className="flex size-10 items-center justify-center rounded-full border border-white/30 bg-white/20 text-sm font-semibold text-white"
+                  className="flex size-10 items-center justify-center rounded-full border border-white/15 bg-white/10 text-sm font-semibold text-white"
                   onClick={() => setMenuOpen(!menuOpen)}
                   id="user-menu-btn"
                 >
                   {user.name.charAt(0).toUpperCase()}
                 </button>
                 {menuOpen && (
-                  <div className="absolute right-0 top-12 w-64 rounded-xl border border-indigo-200/50 bg-white p-3 text-slate-900 shadow-2xl shadow-indigo-500/20">
+                  <div className="absolute right-0 top-12 w-64 rounded-2xl border border-slate-200 bg-white p-3 text-slate-900 shadow-2xl shadow-slate-900/15">
                     <div className="flex flex-col text-sm">
                       <strong>{user.name}</strong>
                       <span className="text-slate-500">{user.email}</span>
@@ -75,10 +77,10 @@ export default function Navbar() {
             </>
           ) : (
             <>
-              <Link href="/login" className="btn border border-white/20 bg-white/10 text-white hover:bg-white/20" id="login-link">
+              <Link href="/login" className="btn border border-white/10 bg-white/10 text-white hover:bg-white/15" id="login-link">
                 Log In
               </Link>
-              <Link href="/signup" className="btn bg-white text-indigo-700 hover:bg-indigo-50" id="signup-link">
+              <Link href="/signup" className="btn bg-white text-slate-950 hover:bg-slate-100" id="signup-link">
                 Get Started
               </Link>
             </>
